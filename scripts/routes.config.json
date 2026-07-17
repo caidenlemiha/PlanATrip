@@ -1,0 +1,13 @@
+{
+  "comment": "Curated routes tracked by the Amadeus refresh job. Amadeus's free/test tier is rate-limited, so this stays a short, deliberate list rather than arbitrary global search. Add/remove routes as your actual travel interests change.",
+  "routes": [
+    { "origin": "KUL", "destination": "NRT" },
+    { "origin": "KUL", "destination": "BKK" },
+    { "origin": "KUL", "destination": "SIN" },
+    { "origin": "KUL", "destination": "ICN" },
+    { "origin": "KUL", "destination": "DPS" },
+    { "origin": "KUL", "destination": "CDG" },
+    { "origin": "KUL", "destination": "LHR" }
+  ],
+  "daysFromTodayOffsets": [14, 30, 60, 90]
+}

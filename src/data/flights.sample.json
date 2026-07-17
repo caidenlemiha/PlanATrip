@@ -1,0 +1,5 @@
+{
+  "fetchedAt": null,
+  "note": "This file is written by .github/workflows/refresh-flights.yml once an AMADEUS_CLIENT_ID/SECRET is configured. Until then it stays empty and the app falls back to distance-based fare estimates.",
+  "offers": []
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "airline": "ANA",
+    "title": "ANA Blue Ribbon Sale",
+    "typicalWindow": "Late Jan – Feb, and again around Aug",
+    "regions": ["JP"],
+    "notes": "ANA's flagship periodic sale on international and domestic fares out of Japan. Exact dates vary year to year — check ANA's website close to the window.",
+    "url": "https://www.ana.co.jp/en/jp/"
+  },
+  {
+    "airline": "AirAsia",
+    "title": "AirAsia BIG Sale",
+    "typicalWindow": "Multiple times a year, often quarterly (e.g. Mar, Jun, Sep, Nov)",
+    "regions": ["MY", "TH", "ID", "PH", "SG", "VN"],
+    "notes": "Recurring regional flash sale across AirAsia's ASEAN network, usually announced a few days in advance.",
+    "url": "https://www.airasia.com/"
+  },
+  {
+    "airline": "Singapore Airlines",
+    "title": "SIA / Scoot Travel Fair",
+    "typicalWindow": "Periodic, often tied to travel expos (Mar, Aug)",
+    "regions": ["SG"],
+    "notes": "Fare promotions frequently aligned with the NATAS travel fair in Singapore.",
+    "url": "https://www.singaporeair.com/"
+  },
+  {
+    "airline": "Malaysia Airlines",
+    "title": "MHfriends / MATTA Fair promotions",
+    "typicalWindow": "Periodic, often around MATTA Fair (Mar, Sep)",
+    "regions": ["MY"],
+    "notes": "Malaysia Airlines regularly runs fare promotions timed with Malaysia's biannual MATTA travel fair.",
+    "url": "https://www.malaysiaairlines.com/"
+  },
+  {
+    "airline": "Cathay Pacific",
+    "title": "Cathay Pacific seasonal sale",
+    "typicalWindow": "Periodic, often Mar and Sep",
+    "regions": ["HK"],
+    "notes": "Seasonal fare sales out of Hong Kong, timing varies by year.",
+    "url": "https://www.cathaypacific.com/"
+  },
+  {
+    "airline": "Korean Air / Jin Air",
+    "title": "Korean carrier seasonal sale",
+    "typicalWindow": "Periodic, often Jan and Jul",
+    "regions": ["KR"],
+    "notes": "Fare promotions out of Seoul, timing varies by year.",
+    "url": "https://www.koreanair.com/"
+  }
+]
