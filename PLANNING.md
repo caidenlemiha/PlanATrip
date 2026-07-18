@@ -66,18 +66,18 @@ Nothing in the browser ever holds a paid API key — only the Actions job does, 
 
 ---
 
-## 4. Phase 1 (MVP) — full breadth, simplified depth
+## 4. Phase 1 (MVP) — full breadth, simplified depth — **shipped**
 
-- [ ] Repo scaffolding: React + Vite app, GitHub Actions workflows, Pages deploy
-- [ ] Origin free-text → airport resolution (static dataset)
-- [ ] Amadeus integration (Actions job → `/data/flights.json` for a small pre-selected set of routes+date windows to start, since Amadeus test tier is rate-limited)
-- [ ] Open-Meteo integration → `/data/weather.json`
-- [ ] Nager.Date integration → `/data/holidays.json`
-- [ ] Currency conversion (live, client-side)
-- [ ] Timezone display + Malaysia-time conversion (client-side)
-- [ ] Dashboard page wired to all the above, with alternate-date and alternate-destination suggestions (simple heuristic: cheaper/clearer nearby dates, similar-region alternate destinations)
-- [ ] Curated promo list (manually seeded JSON, e.g. 5–10 known recurring airline sales with typical timing)
-- [ ] Budget Matcher page, ranking against the same data
+- [x] Repo scaffolding: React + Vite app, GitHub Actions workflows, Pages deploy
+- [x] Origin free-text → airport resolution (static dataset)
+- [x] Amadeus integration (Actions job → `src/data/flights.sample.json` for a small pre-selected set of routes+date windows, since Amadeus test tier is rate-limited) — falls back to a distance-based estimate until the Amadeus key is configured
+- [x] Open-Meteo integration (live forecast ≤15 days out, historical climatology + curated monsoon table beyond that)
+- [x] Nager.Date integration (live, client-side)
+- [x] Currency conversion (live, client-side, Frankfurter)
+- [x] Timezone display + Malaysia-time conversion (client-side)
+- [x] Dashboard page wired to all the above, with alternate-date and alternate-destination suggestions
+- [x] Curated promo list (`src/data/promos.json`)
+- [x] Budget Matcher page, ranking against the same data
 
 ## 5. Phase 2 — depth
 
@@ -86,6 +86,25 @@ Nothing in the browser ever holds a paid API key — only the Actions job does, 
 - Better alternate-date/destination scoring (weight price + weather + holidays together, not just heuristics)
 - Broader holiday-country fallback coverage
 - UI polish, caching/perf, mobile layout
+
+---
+
+## 5b. Phase 3 — Price position + best-time-to-buy (added after Phase 1 shipped)
+
+New ask: for the selected route/date, show whether the quoted price is **low / mid / high vs. usual**, and recommend the **best time to buy** for a lower price.
+
+**Why this needs a design decision up front:** unlike weather or holidays, there's no third-party API that tells you "is this fare cheap." The only honest way to answer that is to compare today's price against *this route's own price history* — which this app doesn't have yet, since it just launched. So this feature has a genuine cold-start period, handled as follows:
+
+- **Data pipeline change:** `refresh-flights.yml` / `fetch-flights.mjs` currently *overwrites* `src/data/flights.sample.json` with the latest quote per route. It will additionally *append* every fetch to a new running log, `src/data/priceHistory.json` (`{origin, destination, targetDate, fetchedAt, leadTimeDays, priceMYR}`). Same job, same schedule — just stops discarding old data.
+- **Price position (low/mid/high):** once a route has enough logged samples (roughly a few weeks of scheduled runs, filtered to a comparable seasonal window), classify today's quoted price by its percentile in that route's real historical distribution. Before that threshold is reached, fall back to comparing the real quoted price against this app's own distance/route fare model (already built, currently used as the offline fallback fare) — clearly labeled as a rough estimate, not history-backed.
+- **Best time to buy:** the refresh job already samples fixed lead times (14/30/60/90 days out, per `routes.config.json`) on every run, so `priceHistory.json` naturally accumulates a price-by-lead-time distribution per route over time. The recommendation reports which lead-time bucket has historically averaged the lowest price for that route (e.g. "prices for this route have typically been lowest around 8-12 weeks before departure"). This is **lead-time-based only** — no "book on a specific weekday" claim, since real fare studies don't support day-of-booking having a reliable effect (the day-of-week fare pattern this app already models is for *departure* day, which is real and already reflected in prices).
+- **Scope:** Trip Dashboard only for now — a price-position badge on each flight card, plus a "best time to buy" section at the bottom of the results. Budget Matcher's ranking logic is unchanged.
+- **Honesty in the UI:** every claim from this feature is labeled with its source — "based on N historical fares for this route" once real, or "rough estimate — not enough price history for this route yet" before that.
+
+Decisions locked in for this feature:
+- Buy-timing basis: lead-time (weeks before departure) only, backed by this app's own accumulating data — no weekday-of-booking claim.
+- Scope: Trip Dashboard only, not Budget Matcher.
+- Cold start: ship a rough, clearly-labeled estimate immediately; it automatically sharpens into real-history-based stats as the existing Actions job keeps running over the following weeks.
 
 ---
 
@@ -108,4 +127,6 @@ Nothing in the browser ever holds a paid API key — only the Actions job does, 
 
 ## Next step
 
-If this scope looks right, I'll start Phase 1: scaffold the repo, get the static data pipeline running with placeholder/sample data first so you can see the full UI immediately, then swap in live Amadeus/Open-Meteo/Nager.Date calls once wired up.
+Phase 1 (section 4) and Phase 3's design (section 5b) are settled. Next: implement Phase 3 —
+extend the Actions job to log price history, add the price-position badge and best-time-to-buy
+section to the Trip Dashboard.

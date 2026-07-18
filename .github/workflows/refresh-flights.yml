@@ -1,0 +1,35 @@
+name: Refresh flight prices (Amadeus)
+
+# Manual trigger only until AMADEUS_CLIENT_ID / AMADEUS_CLIENT_SECRET are added as
+# repo secrets (Settings -> Secrets and variables -> Actions). Once you've added them
+# and are happy with the results, uncomment the schedule below to run automatically.
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch latest fares
+        run: node scripts/fetch-flights.mjs
+        env:
+          AMADEUS_CLIENT_ID: ${{ secrets.AMADEUS_CLIENT_ID }}
+          AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
+
+      - name: Commit updated flight data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/flights.sample.json src/data/priceHistory.json
+          git diff --cached --quiet || git commit -m "Refresh flight price data"
+          git push

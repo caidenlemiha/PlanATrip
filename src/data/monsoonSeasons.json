@@ -1,0 +1,7 @@
+[
+  { "countryCodes": ["MY", "SG", "ID"], "months": [11, 12, 1], "risk": "moderate", "note": "Northeast monsoon season — heavier rain and possible flooding on the east coast of Malaysia and parts of Indonesia." },
+  { "countryCodes": ["TH", "VN", "PH", "MM", "KH"], "months": [6, 7, 8, 9], "risk": "high", "note": "Southwest monsoon season — frequent heavy rain, and this window overlaps with peak tropical storm/typhoon activity in the region." },
+  { "countryCodes": ["PH", "VN", "TW", "HK", "CN", "JP", "KR"], "months": [7, 8, 9, 10], "risk": "high", "note": "Typhoon season across East/Southeast Asia — storms are most frequent in this window." },
+  { "countryCodes": ["IN", "LK", "MV"], "months": [6, 7, 8, 9], "risk": "high", "note": "South Asian monsoon season — heavy rainfall across most of the subcontinent." },
+  { "countryCodes": ["AU"], "months": [11, 12, 1, 2, 3], "risk": "moderate", "note": "Northern Australia wet season / cyclone season." }
+]
