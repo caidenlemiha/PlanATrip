@@ -22,12 +22,29 @@ function findStaticOffer(origin: string, destination: string, date: string): Fli
   return file.offers.find((o) => o.origin === origin && o.destination === destination && o.date === date)
 }
 
-function estimateBasePrice(distanceKm: number, stops: number, seed: string): number {
+interface RouteCharacteristics {
+  distKm: number
+  stops: number
+  seedBase: string
+  weekendSurcharge: number
+}
+
+/** Deterministic per-route/date characteristics shared by both the display estimate and the baseline-fare calc. */
+function routeCharacteristics(origin: Airport, destination: Airport, date: string): RouteCharacteristics {
+  const distKm = haversineKm(origin.lat, origin.lon, destination.lat, destination.lon)
+  const seedBase = `${origin.iata}-${destination.iata}-${date}`
+  const stops = distKm > 6000 && seededRandom(seedBase + 'stops') > 0.4 ? 1 : 0
+  const dow = dayOfWeek(date)
+  const weekendSurcharge = dow === 5 || dow === 0 ? 1.08 : 1
+  return { distKm, stops, seedBase, weekendSurcharge }
+}
+
+/** The "expected" fare for a route like this, with no day-to-day market fluctuation applied. */
+function coreFare(distKm: number, stops: number): number {
   const perKm = 0.42 // rough MYR/km international-economy heuristic
-  const base = Math.max(180, distanceKm * perKm)
+  const base = Math.max(180, distKm * perKm)
   const stopDiscount = stops === 0 ? 1 : 0.88
-  const variance = 0.8 + seededRandom(seed) * 0.4 // +/-20%
-  return Math.round((base * stopDiscount * variance) / 5) * 5
+  return base * stopDiscount
 }
 
 function estimateDurationMinutes(distanceKm: number, stops: number): number {
@@ -43,17 +60,25 @@ function pickTimeSlot(seed: string): string {
   return TIME_SLOTS[idx]
 }
 
+/**
+ * The deterministic "typical fare for a route like this" — same distance/stops/weekend
+ * logic as the display estimate, but without the random day-to-day variance factor. Used
+ * as the comparison baseline for the low/mid/high price-position signal (src/lib/priceInsights.ts)
+ * before enough real fare history has accumulated for a given route.
+ */
+export function getBaselineFareMYR(origin: Airport, destination: Airport, date: string): number {
+  const { distKm, stops, weekendSurcharge } = routeCharacteristics(origin, destination, date)
+  return coreFare(distKm, stops) * weekendSurcharge
+}
+
 /** Deterministic distance-based fare estimate, used whenever no real fetched fare is available for this route+date. */
 function estimateFlightOffer(origin: Airport, destination: Airport, date: string): FlightOffer {
-  const distKm = haversineKm(origin.lat, origin.lon, destination.lat, destination.lon)
-  const seedBase = `${origin.iata}-${destination.iata}-${date}`
-  const stops = distKm > 6000 && seededRandom(seedBase + 'stops') > 0.4 ? 1 : 0
-  const dow = dayOfWeek(date)
-  const weekendSurcharge = dow === 5 || dow === 0 ? 1.08 : 1
-  const airlineIdx = Math.floor(seededRandom(seedBase + 'airline') * AIRLINE_POOL.length)
-  const priceMYR = Math.round(estimateBasePrice(distKm, stops, seedBase + 'price') * weekendSurcharge)
+  const { distKm, stops, seedBase, weekendSurcharge } = routeCharacteristics(origin, destination, date)
+  const variance = 0.8 + seededRandom(seedBase + 'price') * 0.4 // +/-20%, represents natural day-to-day fare fluctuation
+  const priceMYR = Math.round((coreFare(distKm, stops) * weekendSurcharge * variance) / 5) * 5
   const durationMinutes = estimateDurationMinutes(distKm, stops)
   const departTimeLocal = pickTimeSlot(seedBase + 'depart')
+  const airlineIdx = Math.floor(seededRandom(seedBase + 'airline') * AIRLINE_POOL.length)
 
   const departUtc = zonedWallTimeToUtc(date, departTimeLocal, origin.timezone)
   const arriveUtc = new Date(departUtc.getTime() + durationMinutes * 60000)

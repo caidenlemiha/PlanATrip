@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Fetches real fares from the Amadeus Self-Service API for the routes/date offsets
 // listed in scripts/routes.config.json and writes them to src/data/flights.sample.json
-// in the shape the frontend (src/lib/flights.ts) expects.
+// in the shape the frontend (src/lib/flights.ts) expects. Also appends every observation
+// to src/data/priceHistory.json, which src/lib/priceInsights.ts uses to power the
+// low/mid/high price-position badge and the best-time-to-buy recommendation.
 //
 // Requires AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET in the environment
 // (set as GitHub Actions secrets — see .github/workflows/refresh-flights.yml).
@@ -14,6 +16,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const ROUTES_CONFIG_PATH = path.join(ROOT, 'scripts', 'routes.config.json')
 const OUTPUT_PATH = path.join(ROOT, 'src', 'data', 'flights.sample.json')
+const HISTORY_PATH = path.join(ROOT, 'src', 'data', 'priceHistory.json')
+const HISTORY_RETENTION_DAYS = 400 // keep roughly a season-over-season window, bound file growth
 
 const AMADEUS_BASE = 'https://test.api.amadeus.com'
 
@@ -97,15 +101,27 @@ async function fetchCheapestOffer(token, origin, destination, date) {
 async function main() {
   const config = JSON.parse(await readFile(ROUTES_CONFIG_PATH, 'utf-8'))
   const token = await getAccessToken()
-  const today = new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
 
   const offers = []
+  const newHistoryEntries = []
   for (const { origin, destination } of config.routes) {
     for (const offset of config.daysFromTodayOffsets) {
       const date = addDays(today, offset)
       console.log(`Fetching ${origin} -> ${destination} on ${date}...`)
       const offer = await fetchCheapestOffer(token, origin, destination, date)
-      if (offer) offers.push(offer)
+      if (offer) {
+        offers.push(offer)
+        newHistoryEntries.push({
+          origin,
+          destination,
+          targetDate: date,
+          fetchedAt: offer.fetchedAt,
+          leadTimeDays: offset,
+          priceMYR: offer.priceMYR,
+        })
+      }
       await new Promise((r) => setTimeout(r, 300)) // be polite to the rate limit
     }
   }
@@ -113,6 +129,12 @@ async function main() {
   const output = { fetchedAt: new Date().toISOString(), note: 'Fetched from the Amadeus Self-Service API by scripts/fetch-flights.mjs', offers }
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2) + '\n')
   console.log(`Wrote ${offers.length} offers to ${path.relative(ROOT, OUTPUT_PATH)}`)
+
+  const historyFile = JSON.parse(await readFile(HISTORY_PATH, 'utf-8'))
+  const cutoff = new Date(now.getTime() - HISTORY_RETENTION_DAYS * 86400000)
+  const entries = [...historyFile.entries, ...newHistoryEntries].filter((e) => new Date(e.fetchedAt) >= cutoff)
+  await writeFile(HISTORY_PATH, JSON.stringify({ note: historyFile.note, entries }, null, 2) + '\n')
+  console.log(`Appended ${newHistoryEntries.length} entries to ${path.relative(ROOT, HISTORY_PATH)} (${entries.length} total)`)
 }
 
 main().catch((err) => {

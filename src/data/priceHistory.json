@@ -1,0 +1,4 @@
+{
+  "note": "Appended to by .github/workflows/refresh-flights.yml on every scheduled run of scripts/fetch-flights.mjs. Each entry is one real Amadeus fare observation. Starts empty and builds up over time; src/lib/priceInsights.ts falls back to a distance-based estimate baseline until a route has enough entries.",
+  "entries": []
+}

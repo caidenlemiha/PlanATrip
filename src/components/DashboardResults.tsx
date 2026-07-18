@@ -5,11 +5,13 @@ import { getFlightOffer } from '../lib/flights'
 import { getWeatherAssessment } from '../lib/weather'
 import { getHolidayInfo } from '../lib/holidays'
 import { suggestAlternateDates, suggestAlternateDestinations, type DateSuggestion, type DestinationSuggestion } from '../lib/suggest'
+import { getBestTimeToBuy } from '../lib/priceInsights'
 import { FlightCard } from './FlightCard'
 import { WeatherPanel } from './WeatherPanel'
 import { HolidayBadge } from './HolidayBadge'
 import { PromoList } from './PromoList'
 import { AlternateDates, AlternateDestinations } from './AlternateSuggestions'
+import { BestTimeToBuy } from './BestTimeToBuy'
 
 interface AsyncState<T> {
   data: T | null
@@ -21,6 +23,7 @@ export function DashboardResults({ query }: { query: DashboardQuery }) {
 
   const outboundOffer = getFlightOffer(originAirport, destAirport, departDate)
   const returnOffer = returnDate ? getFlightOffer(destAirport, originAirport, returnDate) : null
+  const buyTiming = getBestTimeToBuy(originAirport, destAirport)
 
   const [departWeather, setDepartWeather] = useState<AsyncState<WeatherAssessment>>({ data: null, loading: true })
   const [returnWeather, setReturnWeather] = useState<AsyncState<WeatherAssessment>>({ data: null, loading: Boolean(returnDate) })
@@ -123,6 +126,8 @@ export function DashboardResults({ query }: { query: DashboardQuery }) {
 
       <AlternateDates suggestions={altDates} searched={altDatesSearched} />
       <AlternateDestinations suggestions={altDestinations} searched={altDestinationsSearched} />
+
+      <BestTimeToBuy timing={buyTiming} />
     </div>
   )
 }

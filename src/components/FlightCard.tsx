@@ -3,6 +3,8 @@ import type { Airport, FlightOffer } from '../types'
 import { convertFromMYR, formatMoney } from '../lib/currency'
 import { zonedWallTimeToUtc, toMalaysiaTime, zoneOffsetLabel, MALAYSIA_TZ } from '../lib/timezone'
 import { isEstimated } from '../lib/flights'
+import { getPricePosition } from '../lib/priceInsights'
+import { PricePositionBadge } from './PricePositionBadge'
 
 interface Props {
   offer: FlightOffer
@@ -33,6 +35,7 @@ export function FlightCard({ offer, origin, destination, currency }: Props) {
 
   const hours = Math.floor(offer.durationMinutes / 60)
   const mins = offer.durationMinutes % 60
+  const pricePosition = getPricePosition(origin, destination, offer.date, offer)
 
   return (
     <div className="card flight-card">
@@ -40,6 +43,9 @@ export function FlightCard({ offer, origin, destination, currency }: Props) {
         <div>
           <div className="price">{displayPrice ?? `MYR ${offer.priceMYR}`}</div>
           <div className="muted">{offer.airline} &middot; {offer.stops === 0 ? 'Direct' : `${offer.stops} stop`} &middot; {hours}h {mins}m</div>
+          <div className="price-position-row">
+            <PricePositionBadge position={pricePosition} />
+          </div>
         </div>
         {isEstimated(offer) && (
           <span className="badge badge-muted" title="No live fare fetched yet for this route/date — showing a distance-based estimate">

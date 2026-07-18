@@ -304,6 +304,11 @@ button.primary:disabled {
 .badge-high { color: var(--risk-high); background: var(--risk-high-bg); }
 .badge-holiday { color: var(--risk-holiday); background: var(--risk-holiday-bg); margin-left: 6px; }
 .badge-muted { color: var(--text); background: var(--bg-alt); border: 1px solid var(--border); }
+.badge-price-low { color: var(--risk-none); background: var(--risk-none-bg); }
+.badge-price-mid { color: var(--risk-moderate); background: var(--risk-moderate-bg); }
+.badge-price-high { color: var(--risk-high); background: var(--risk-high-bg); }
+.badge-asterisk { margin-left: 2px; }
+.price-position-row { margin-top: 6px; }
 
 .badge-line { margin-bottom: 6px; }
 

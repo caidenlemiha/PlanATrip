@@ -44,6 +44,28 @@ export interface HolidayInfo {
   name?: string
 }
 
+export interface PriceHistoryEntry {
+  origin: string // IATA
+  destination: string // IATA
+  targetDate: string // YYYY-MM-DD, the departure date this fare was for
+  fetchedAt: string // ISO timestamp of when this fare was observed
+  leadTimeDays: number // targetDate - fetchedAt, in days
+  priceMYR: number
+}
+
+export interface PricePosition {
+  label: 'low' | 'mid' | 'high'
+  ratio: number // observed price / baseline price
+  source: 'history' | 'estimate'
+  sampleSize?: number // number of historical fares this was judged against, when source is 'history'
+}
+
+export interface BuyTiming {
+  source: 'history' | 'heuristic'
+  recommendation: string
+  sampleSize?: number
+}
+
 export interface Promo {
   airline: string
   title: string
